@@ -79,15 +79,19 @@ Menu translation failed today."
 --- PAGE TEXT END ---
 """
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4-1106-preview",
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print("❌ GPT failed:", e)
-        return "Menu translation failed today."
+    for attempt in range(3):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4-1106-preview",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            result = response.choices[0].message.content.strip()
+            if "Menu translation failed today" not in result:
+                return result
+        except Exception as e:
+            print(f"❌ GPT attempt {attempt + 1} failed:", e)
+            time.sleep(1)
+    return "Menu translation failed today."
 
 
 def post_to_slack(message: str):
