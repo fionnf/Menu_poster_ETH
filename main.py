@@ -1,86 +1,113 @@
 import os
+import re
 import requests
+from datetime import date
 from slack_sdk import WebClient
 from dotenv import load_dotenv
-import openai
-from datetime import date
+from openai import OpenAI as OpenAIClient
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import time
 from bs4 import BeautifulSoup
 
-# Load environment variables from .env file
+# Load env vars
 load_dotenv()
 
-# Set OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SLACK_TOKEN = os.getenv("SLACK_BOT_TOKEN")
+SLACK_CHANNEL = os.getenv("SLACK_CHANNEL_ID")
+
+client = OpenAIClient(api_key=OPENAI_API_KEY)
 
 
-def fetch_eth_menu_html():
-    """Fetch raw HTML from ETH menu page."""
-    today = date.today().isoformat()
-    mensa_id = 19  # ETH Zentrum - Polyterrasse
-    url = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={today}&id={mensa_id}"
-    print(f"Fetching ETH menu from: {url}")
+def fetch_eth_webpage_raw(target_date: str) -> str:
+    today = date.today().isoformat()  # returns YYYY-MM-DD
+    url = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={target_date}&id=19#content"
+    print(f"📥 Downloading raw ETH menu from: {url}")
 
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers)
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raises a proper error if 404
+        return response.text
+    except Exception as e:
+        return f"Failed to fetch page: {e}"
 
-    if response.status_code != 200:
-        print("⚠️ Failed to fetch page:", response.status_code)
-        return None
 
-    return response.text
+def extract_visible_text(raw_html: str) -> str:
+    soup = BeautifulSoup(raw_html, "html.parser")
+    for script in soup(["script", "style"]):
+        script.extract()  # Remove scripts and styles
+    text = soup.get_text(separator="\n")
+    lines = [line.strip() for line in text.splitlines()]
+    text = "\n".join(line for line in lines if line)
+    return text
+
+def fetch_eth_webpage_raw_selenium(date_str):
+    today = date.today().isoformat()  # returns YYYY-MM-DD
+    url = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={today}&id=19#content"
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+    time.sleep(3)  # Wait for JS to load
+    html = driver.page_source
+    driver.quit()
+    return html
 
 
-def extract_menu_with_gpt(page_html):
-    """Send ETH HTML to GPT and extract the daily menu in English Slack-friendly format."""
-    if not page_html:
-        return "Couldn't fetch the menu today. ☹️"
+def translate_menu_with_gpt(visible_text: str) -> str:
+    prompt = f"""You are a helpful assistant.
 
-    # Use only relevant content to avoid context overflow
-    soup = BeautifulSoup(page_html, "html.parser")
-    menu_div = soup.find("div", {"id": "eth_menu_day"}) or soup  # fallback to whole page
-    menu_html = menu_div.get_text(separator="\n", strip=True)[:8000]  # max ~8k chars
+The following is the full visible **text content** of the ETH Zürich cafeteria page for today. 
+Your job is to extract ONLY the relevant **menu items**, and translate them into a clean, friendly, readable English list for Slack.
 
-    prompt = f"""
-You're an ETH Zurich student reading the raw text of today's cafeteria menu.
+Ignore opening hours, prices, promotions, allergens, and dates. Focus just on dishes and sides.
 
-Extract the key meals (title, description, price) from the following text and rewrite it in a friendly English style for a Slack message.
+If no food items are found, say so politely.
 
-If the content is missing, say "No menu found today."
-
-Here is the text:
-{menu_html}
+--- PAGE TEXT START ---
+{visible_text}
+--- PAGE TEXT END ---
 """
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
         )
-        return response["choices"][0]["message"]["content"].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         print("❌ GPT failed:", e)
         return "Menu translation failed today."
 
 
-def post_to_slack(message):
-    """Post the message to Slack using environment credentials."""
-    slack_token = os.getenv("SLACK_BOT_TOKEN")
-    channel_id = os.getenv("SLACK_CHANNEL_ID")
-
-    if not slack_token or not channel_id:
-        raise EnvironmentError("Missing Slack credentials in .env file")
-
-    client = WebClient(token=slack_token)
-    try:
-        client.chat_postMessage(channel=channel_id, text=message)
-        print("✅ Menu posted to Slack.")
-    except Exception as e:
-        print("❌ Failed to post to Slack:", e)
+def post_to_slack(message: str):
+    client = WebClient(token=SLACK_TOKEN)
+    client.chat_postMessage(channel=SLACK_CHANNEL, text=message)
+    print("✅ Menu posted to Slack.")
 
 
 if __name__ == "__main__":
-    raw_html = fetch_eth_menu_html()
-    translated_menu = extract_menu_with_gpt(raw_html)
+    today = date.today().isoformat()
+    raw_html = fetch_eth_webpage_raw_selenium(today)
+    # 💾 Save raw HTML for inspection (optional)
+    with open("raw_menu_page.html", "w", encoding="utf-8") as f:
+        f.write(raw_html)
+
+    visible_text = extract_visible_text(raw_html)
+
+    with open("raw_menu_text.txt", "w", encoding="utf-8") as f:
+        f.write(visible_text)
+
+    print("\n📄 Extracted visible text:\n")
+    print(visible_text[:2000])  # preview
+    print("\n--- END OF TEXT SNIPPET ---\n")
+
+    translated_menu = translate_menu_with_gpt(visible_text)
     print("🔍 Translated menu:\n", translated_menu)
     post_to_slack(translated_menu)
