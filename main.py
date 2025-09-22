@@ -19,23 +19,6 @@ SLACK_CHANNEL = os.getenv("SLACK_CHANNEL_ID")
 
 client = OpenAIClient(api_key=OPENAI_API_KEY)
 
-
-def fetch_eth_webpage_raw(target_date: str) -> str:
-    today = date.today().isoformat()  # returns YYYY-MM-DD
-    url = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={target_date}&id=19#content"
-    print(f"📥 Downloading raw ETH menu from: {url}")
-
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-        }
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises a proper error if 404
-        return response.text
-    except Exception as e:
-        return f"Failed to fetch page: {e}"
-
-
 def extract_visible_text(raw_html: str) -> str:
     soup = BeautifulSoup(raw_html, "html.parser")
     for script in soup(["script", "style"]):
@@ -45,9 +28,7 @@ def extract_visible_text(raw_html: str) -> str:
     text = "\n".join(line for line in lines if line)
     return text
 
-def fetch_eth_webpage_raw_selenium(date_str):
-    today = date.today().isoformat()  # returns YYYY-MM-DD
-    url = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={today}&id=19#content"
+def fetch_eth_webpage_raw_selenium(url):
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -61,14 +42,37 @@ def fetch_eth_webpage_raw_selenium(date_str):
 
 
 def translate_menu_with_gpt(visible_text: str) -> str:
-    prompt = f"""You are a helpful assistant.
+    prompt = f"""🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
+(Use this prompt daily to extract and format the menu from one restaurant section on the ETH Zürich cafeteria site.)
 
-The following is the full visible **text content** of the ETH Zürich cafeteria page for today. 
-Your job is to extract ONLY the relevant **menu items**, and translate them into a clean, friendly, readable English list for Slack.
+🎯 Your Instructions:
+	•	Extract only the menu items: main dishes and sides from the visible page.
+	•	Output a clean, friendly English translation.
+	•	Format for Slack, following the rules below.
 
-Ignore opening hours, prices, promotions, allergens, and dates. Focus just on dishes and sides.
+✅ Formatting Rules:
+	•	One bullet per dish – no grouping of multiple dishes together.
+	•	Bold dish name using Slack-style asterisks (*).
+	•	Add 1 relevant emoji per dish to increase clarity and engagement.
+	•	No code blocks, tables, or long explanations.
+	•	Combine any buffets into one bullet (e.g. Salad Buffet, Oriental Buffet).
+	•	Keep it short, clear, skimmable.
 
-If no food items are found, say so politely.
+🚫 Do NOT include:
+	•	Prices, allergens, times, or dates.
+	•	Any metadata, commentary, or formatting notes.
+	•	Section headers (e.g., no “Food Market” or “Fusion Menu” titles).
+	•	The Choose 5 option, pizza margherita, or any buffets.
+
+✅ Example Output:
+• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds.
+• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon.
+• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise.
+• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade.
+• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade.
+
+🛑 If no dishes are found, output:
+Menu translation failed today."
 
 --- PAGE TEXT START ---
 {visible_text}
@@ -94,20 +98,32 @@ def post_to_slack(message: str):
 
 if __name__ == "__main__":
     today = date.today().isoformat()
-    raw_html = fetch_eth_webpage_raw_selenium(today)
-    # 💾 Save raw HTML for inspection (optional)
-    with open("raw_menu_page.html", "w", encoding="utf-8") as f:
-        f.write(raw_html)
+    url_fm = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={today}&id=19#content"
+    url_fu = f"https://ethz.ch/de/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={today}&id=20#content"
+    raw_html_fm = fetch_eth_webpage_raw_selenium(url_fm)
+    raw_html_fu = fetch_eth_webpage_raw_selenium(url_fu)
 
-    visible_text = extract_visible_text(raw_html)
+    visible_text_fm = extract_visible_text(raw_html_fm)
+    visible_text_fu = extract_visible_text(raw_html_fu)
 
-    with open("raw_menu_text.txt", "w", encoding="utf-8") as f:
-        f.write(visible_text)
+    with open("raw_menu_fm_text.txt", "w", encoding="utf-8") as f:
+        f.write(visible_text_fm)
+    with open("raw_menu_fu_text.txt", "w", encoding="utf-8") as f:
+        f.write(visible_text_fu)
 
-    print("\n📄 Extracted visible text:\n")
-    print(visible_text[:2000])  # preview
-    print("\n--- END OF TEXT SNIPPET ---\n")
+    print("\n📄 Extracted FM text:\n")
+    print(visible_text_fm[:2000])
+    print("\n📄 Extracted FU text:\n")
+    print(visible_text_fu[:2000])
+    print("\n--- END OF TEXT SNIPPETS ---\n")
 
-    translated_menu = translate_menu_with_gpt(visible_text)
-    print("🔍 Translated menu:\n", translated_menu)
-    post_to_slack(translated_menu)
+    translated_menu_fm = translate_menu_with_gpt(visible_text_fm)
+    translated_menu_fu = translate_menu_with_gpt(visible_text_fu)
+
+    full_message = (f"🍽️ ETH Zürich Menu – Today’s Options\n\n\n "
+                    f"*🍽️ Food Market Menu:*\n\n"
+                    f"{translated_menu_fm}\n\n\n"
+                    f"*🥗 Fusion Menu:*\n\n{translated_menu_fu}\n\n\n"
+                    f"Enjoy your meal! 😋🥄")
+    print("🔍 Final Menu Message:\n", full_message)
+    post_to_slack(full_message)
