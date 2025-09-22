@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout Codes
         uses: actions/checkout@v4
 
       - name: 🐍 Set up Python
