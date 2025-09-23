@@ -2,7 +2,7 @@ name: Post ETH Menu
 
 on:
   schedule:
-    - cron: '0 9 * * 1-5'  # Every weekday at 10:00 CET (09:00 UTC)
+    - cron: '0 8 * * 1-5'  # Every weekday at 10:00 CET (09:00 UTC)
   workflow_dispatch:     # Allows manual runs from GitHub UI
 
 jobs:
