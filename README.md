@@ -1,6 +1,6 @@
 # 🧾 ETH Zürich Menu to Slack Posting Action Bot
 
-This GitHub Action fetches the daily menus from the ETH Zürich **Fusion** and **Food Market** cafeterias, translates and formats them using GPT, and posts a clean, emoji-enhanced message to a specified Slack channel.
+This GitHub Action fetches the daily menus from the ETH Zürich **Fusion** and **Food Market** cafeterias, translates and formats them using GPT, and posts a clean, emoji-enhanced message to a specified Slack channel.,,
 
 ---
 
