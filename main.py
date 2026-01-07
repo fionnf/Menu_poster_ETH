@@ -53,7 +53,7 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 ✅ Formatting Rules:
 	•	One bullet per dish – no grouping of multiple dishes together.
 	•	Bold dish name using Slack-style asterisks (*).
-	•	Add 1 relevant emoji per dish to increase clarity and engagement.
+	•	Add 1 relevant emoji per dish to increase clarity and engagement. The emoji can be very funny or a joke of the dish sometimes. 
 	•	No code blocks, tables, or long explanations.
 	•	Combine any buffets into one bullet (e.g. Salad Buffet, Oriental Buffet).
 	•	Keep it short, clear, skimmable.
