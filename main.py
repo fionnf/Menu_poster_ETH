@@ -57,19 +57,20 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 	•	No code blocks, tables, or long explanations.
 	•	Combine any buffets into one bullet (e.g. Salad Buffet, Oriental Buffet).
 	•	Keep it short, clear, skimmable.
+	•	Include the student and worker price in example 7(11)
 
 🚫 Do NOT include:
-	•	Prices, allergens, times, or dates.
+	•	allergens, times, or dates.
 	•	Any metadata, commentary, or formatting notes.
 	•	Section headers (e.g., no “Food Market” or “Fusion Menu” titles).
 	•	The Choose 5 option, pizza margherita, or any buffets.
 
 ✅ Example Output:
-• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds.
-• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon.
-• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise.
-• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade.
-• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade.
+• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds. 11(13)
+• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon. 7(11)
+• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise. 9(11)
+• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade. 12(11)
+• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. 13(12)
 
 🛑 If no dishes are found, output:
 Menu translation failed today."
