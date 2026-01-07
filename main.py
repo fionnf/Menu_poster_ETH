@@ -57,7 +57,7 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 	•	No code blocks, tables, or long explanations.
 	•	Combine any buffets into one bullet (e.g. Salad Buffet, Oriental Buffet).
 	•	Keep it short, clear, skimmable.
-	•	Include the student and worker price in example 7(11)
+	•	Include the student and worker price where possible at the end of each dish: example 7(11). 
 
 🚫 Do NOT include:
 	•	allergens, times, or dates.
@@ -73,7 +73,7 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 • 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. 13(12)
 
 🛑 If no dishes are found, output:
-Menu translation failed today."
+Restaurant Closed."
 
 --- PAGE TEXT START ---
 {visible_text}
