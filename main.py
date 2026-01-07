@@ -66,11 +66,11 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 	•	The Choose 5 option, pizza margherita, or any buffets.
 
 ✅ Example Output:
-• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds. 11(13)
-• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon. 7(11)
-• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise. 9(11)
-• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade. 12(11)
-• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. 13(12)
+• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds. CHF 11(13)
+• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon. CHF 7(11)
+• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise. CHF 9(11)
+• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade. CHF 12(11)
+• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. CHF 13(12)
 
 🛑 If no dishes are found, output:
 Restaurant Closed."
