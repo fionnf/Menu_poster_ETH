@@ -126,7 +126,7 @@ if __name__ == "__main__":
     translated_menu_fu = translate_menu_with_gpt(visible_text_fu)
 
     full_message = (f"🍽️ ETH Zürich Menu – Today’s Options\n\n\n "
-                    f"*🍽️ Food Market Menu:*\n\n"
+                    f"*🎪 Food Market Menu:*\n\n"
                     f"{translated_menu_fm}\n\n\n"
                     f"*🥗 Fusion Menu:*\n\n{translated_menu_fu}\n\n\n"
                     f"Enjoy your meal! 😋🥄")
