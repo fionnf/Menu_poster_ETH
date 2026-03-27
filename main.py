@@ -83,7 +83,7 @@ Restaurant Closed."
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model="gpt-4-1106-preview",
+                model="gpt-4.1-nano",
                 messages=[{"role": "user", "content": prompt}],
             )
             result = response.choices[0].message.content.strip()
