@@ -42,7 +42,7 @@ def fetch_eth_webpage_raw_selenium(url):
 
 
 def translate_menu_with_gpt(visible_text: str) -> str:
-    prompt = f”””🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
+    prompt = f"""🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
 (Use this prompt daily to extract and format the menu from one restaurant section on the ETH Zürich cafeteria site.)
 
 🎯 Your Instructions:
@@ -51,7 +51,7 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 	•	Format for Slack, following the rules below.
 
 ✅ Formatting Rules:
-	•	One bullet per dish – no grouping of multiple dishes together.
+	•	One bullet per dish - no grouping of multiple dishes together.
 	•	Bold dish name using Slack-style asterisks (*).
 	•	Add 1 relevant but very funny emoji per dish to increase clarity and engagement. The emoji can be very funny or a joke of the dish.
 	•	No code blocks, tables, or long explanations.
@@ -62,44 +62,44 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 🚫 Do NOT include:
 	•	allergens, times, or dates.
 	•	Any metadata, commentary, or formatting notes.
-	•	Section headers (e.g., no “Food Market” or “Fusion Menu” titles).
+	•	Section headers (e.g., no "Food Market" or "Fusion Menu" titles).
 	•	The Choose 5 option, pizza margherita, or any buffets.
 
 ✅ Example Output:
-• 🔥 Spicy Meatballs – In tangy tomato sauce, served with smoked polenta and broccoli with seeds. CHF 11(13)
-• 🍖 Schnitzeljagd – Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon. CHF 7(11)
-• 🥗 Onigiri Woodsmoke (Vegan) – Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise. CHF 9(11)
-• 🍅 Pizza Bruschetta (Vegetarian) – Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade. CHF 12(11)
-• 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. CHF 13(12)
+• 🔥 Spicy Meatballs - In tangy tomato sauce, served with smoked polenta and broccoli with seeds. CHF 11(13)
+• 🍖 Schnitzeljagd - Breaded pork schnitzel with tartar sauce, fries, coleslaw, onion ring, and a slice of lemon. CHF 7(11)
+• 🥗 Onigiri Woodsmoke (Vegan) - Smoked salmon alternative with sushi rice, edamame, cucumber, nori, and wasabi mayonnaise. CHF 9(11)
+• 🍅 Pizza Bruschetta (Vegetarian) - Tomatoes, mozzarella, garlic, basil, and balsamic glaze, served with salad or lemonade. CHF 12(11)
+• 🍝 Spaghetti all'Arrabbiata (Vegan) - Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. CHF 13(12)
 
 🛑 If no dishes are found, output:
-Restaurant Closed.”
+Restaurant Closed.
 
 --- PAGE TEXT START ---
 {visible_text}
 --- PAGE TEXT END ---
-“””
+"""
 
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model=”gpt-4.1-nano”,
-                messages=[{“role”: “user”, “content”: prompt}],
+                model="gpt-4.1-nano",
+                messages=[{"role": "user", "content": prompt}],
             )
             result = response.choices[0].message.content.strip()
-            if “Menu translation failed today” not in result:
+            if "Menu translation failed today" not in result:
                 return result
         except Exception as e:
-            print(f”❌ GPT attempt {attempt + 1} failed:”, e)
+            print(f"❌ GPT attempt {attempt + 1} failed:", e)
             time.sleep(1)
-    return “Menu translation failed today.”
+    return "Menu translation failed today."
 
 
 def get_eco_tip(visible_text: str) -> str:
-    prompt = f”””Analyze this ETH Zürich cafeteria menu and identify ONE dish with the lowest environmental footprint (prioritize plant-based, vegetarian, or vegan options).
+    prompt = f"""Analyze this ETH Zürich cafeteria menu and identify ONE dish with the lowest environmental footprint (prioritize plant-based, vegetarian, or vegan options).
 
 Output ONLY one sentence in this format:
-🌍 Eco pick: [dish name] – [brief reason why it’s low footprint, e.g., plant-based, local ingredients, minimal packaging]
+🌍 Eco pick: [dish name] - [brief reason why it's low footprint, e.g., plant-based, local ingredients, minimal packaging]
 
 If no dishes found or unable to determine, respond with:
 🌍 Eco pick: Not available today
@@ -107,20 +107,20 @@ If no dishes found or unable to determine, respond with:
 --- MENU TEXT START ---
 {visible_text}
 --- MENU TEXT END ---
-“””
+"""
 
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model=”gpt-4.1-nano”,
-                messages=[{“role”: “user”, “content”: prompt}],
+                model="gpt-4.1-nano",
+                messages=[{"role": "user", "content": prompt}],
             )
             result = response.choices[0].message.content.strip()
             return result
         except Exception as e:
-            print(f”❌ Eco tip attempt {attempt + 1} failed:”, e)
+            print(f"❌ Eco tip attempt {attempt + 1} failed:", e)
             time.sleep(1)
-    return “🌍 Eco pick: Not available today”
+    return "🌍 Eco pick: Not available today"
 
 
 def post_to_slack(message: str):
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     eco_tip_fm = get_eco_tip(visible_text_fm)
     eco_tip_fu = get_eco_tip(visible_text_fu)
 
-    full_message = (f"🍽️ ETH Zürich Menu – Today’s Options\n\n\n "
+    full_message = (f"🍽️ ETH Zürich Menu - Today's Options\n\n\n "
                     f"*🍽️ Food Market Menu:*\n\n"
                     f"{translated_menu_fm}\n\n\n"
                     f"*🥗 Fusion Menu:*\n\n{translated_menu_fu}\n\n\n"
