@@ -42,7 +42,7 @@ def fetch_eth_webpage_raw_selenium(url):
 
 
 def translate_menu_with_gpt(visible_text: str) -> str:
-    prompt = f"""🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
+    prompt = f”””🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
 (Use this prompt daily to extract and format the menu from one restaurant section on the ETH Zürich cafeteria site.)
 
 🎯 Your Instructions:
@@ -53,11 +53,11 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 ✅ Formatting Rules:
 	•	One bullet per dish – no grouping of multiple dishes together.
 	•	Bold dish name using Slack-style asterisks (*).
-	•	Add 1 relevant but very funny emoji per dish to increase clarity and engagement. The emoji can be very funny or a joke of the dish. 
+	•	Add 1 relevant but very funny emoji per dish to increase clarity and engagement. The emoji can be very funny or a joke of the dish.
 	•	No code blocks, tables, or long explanations.
 	•	Combine any buffets into one bullet (e.g. Salad Buffet, Oriental Buffet).
 	•	Keep it short, clear, skimmable.
-	•	Include the student and worker price where possible at the end of each dish: example 7(11). 
+	•	Include the student and worker price where possible at the end of each dish: example 7(11).
 
 🚫 Do NOT include:
 	•	allergens, times, or dates.
@@ -73,26 +73,54 @@ def translate_menu_with_gpt(visible_text: str) -> str:
 • 🍝 Spaghetti all’Arrabbiata (Vegan) – Spicy tomato sauce with bell pepper strips, topped with grated cheese, served with salad or lemonade. CHF 13(12)
 
 🛑 If no dishes are found, output:
-Restaurant Closed."
+Restaurant Closed.”
 
 --- PAGE TEXT START ---
 {visible_text}
 --- PAGE TEXT END ---
-"""
+“””
 
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
-                model="gpt-4.1-nano",
-                messages=[{"role": "user", "content": prompt}],
+                model=”gpt-4.1-nano”,
+                messages=[{“role”: “user”, “content”: prompt}],
             )
             result = response.choices[0].message.content.strip()
-            if "Menu translation failed today" not in result:
+            if “Menu translation failed today” not in result:
                 return result
         except Exception as e:
-            print(f"❌ GPT attempt {attempt + 1} failed:", e)
+            print(f”❌ GPT attempt {attempt + 1} failed:”, e)
             time.sleep(1)
-    return "Menu translation failed today."
+    return “Menu translation failed today.”
+
+
+def get_eco_tip(visible_text: str) -> str:
+    prompt = f”””Analyze this ETH Zürich cafeteria menu and identify ONE dish with the lowest environmental footprint (prioritize plant-based, vegetarian, or vegan options).
+
+Output ONLY one sentence in this format:
+🌍 Eco pick: [dish name] – [brief reason why it’s low footprint, e.g., plant-based, local ingredients, minimal packaging]
+
+If no dishes found or unable to determine, respond with:
+🌍 Eco pick: Not available today
+
+--- MENU TEXT START ---
+{visible_text}
+--- MENU TEXT END ---
+“””
+
+    for attempt in range(3):
+        try:
+            response = client.chat.completions.create(
+                model=”gpt-4.1-nano”,
+                messages=[{“role”: “user”, “content”: prompt}],
+            )
+            result = response.choices[0].message.content.strip()
+            return result
+        except Exception as e:
+            print(f”❌ Eco tip attempt {attempt + 1} failed:”, e)
+            time.sleep(1)
+    return “🌍 Eco pick: Not available today”
 
 
 def post_to_slack(message: str):
@@ -124,11 +152,14 @@ if __name__ == "__main__":
 
     translated_menu_fm = translate_menu_with_gpt(visible_text_fm)
     translated_menu_fu = translate_menu_with_gpt(visible_text_fu)
+    eco_tip_fm = get_eco_tip(visible_text_fm)
+    eco_tip_fu = get_eco_tip(visible_text_fu)
 
     full_message = (f"🍽️ ETH Zürich Menu – Today’s Options\n\n\n "
                     f"*🍽️ Food Market Menu:*\n\n"
                     f"{translated_menu_fm}\n\n\n"
                     f"*🥗 Fusion Menu:*\n\n{translated_menu_fu}\n\n\n"
+                    f"_{eco_tip_fm} | {eco_tip_fu}_\n\n"
                     f"Enjoy your meal! 😋🥄")
     print("🔍 Final Menu Message:\n", full_message)
     post_to_slack(full_message)
