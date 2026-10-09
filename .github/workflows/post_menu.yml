@@ -2,10 +2,23 @@ name: Post ETH Menu
 
 on:
   schedule:
-    - cron: '0 5 * * 1-5'  # Every weekday at 10:00 CET (09:00 UTC)
+    - cron: '0 5 * * 1-5'  # Every weekday at 05:00 UTC (GitHub often starts scheduled runs late)
   workflow_dispatch:     # Allows manual runs from GitHub UI
 
 jobs:
+  # GitHub disables scheduled workflows after 60 days without commits to the
+  # repo. Re-enabling the workflow through the API resets that timer, so the
+  # daily post keeps running even when nobody touches the code.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: 🔁 Keep scheduled workflow enabled
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/post_menu.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   run-menu-script:
     runs-on: ubuntu-latest
 
