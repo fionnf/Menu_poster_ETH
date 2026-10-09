@@ -17,19 +17,16 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 SLACK_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL_ID")
 
-CLAUDE_MODEL = "claude-opus-5-5"
+CLAUDE_MODEL = "claude-haiku-5-5"
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 def ask_claude(prompt: str) -> str:
     """Send a single prompt to Claude and return the text of its reply."""
-    response = client.beta.messages.create(
+    response = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=16000,
-        # Route to a fallback model automatically if a safety classifier declines.
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
         messages=[{"role": "user", "content": prompt}],
     )
     if response.stop_reason == "refusal":
