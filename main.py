@@ -4,7 +4,7 @@ import requests
 from datetime import date
 from slack_sdk import WebClient
 from dotenv import load_dotenv
-from openai import OpenAI as OpenAIClient
+import anthropic
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
@@ -13,11 +13,26 @@ from bs4 import BeautifulSoup
 # Load env vars
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 SLACK_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL_ID")
 
-client = OpenAIClient(api_key=OPENAI_API_KEY)
+CLAUDE_MODEL = "claude-haiku-5-5"
+
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+
+def ask_claude(prompt: str) -> str:
+    """Send a single prompt to Claude and return the text of its reply."""
+    response = client.messages.create(
+        model=CLAUDE_MODEL,
+        max_tokens=16000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    if response.stop_reason == "refusal":
+        raise RuntimeError(f"Claude refused the request: {response.stop_details}")
+    text = "".join(block.text for block in response.content if block.type == "text")
+    return text.strip()
 
 def extract_visible_text(raw_html: str) -> str:
     soup = BeautifulSoup(raw_html, "html.parser")
@@ -41,7 +56,7 @@ def fetch_eth_webpage_raw_selenium(url):
     return html
 
 
-def translate_menu_with_gpt(visible_text: str) -> str:
+def translate_menu_with_claude(visible_text: str) -> str:
     prompt = f"""🧠 TASK: Translate ETH Zürich Cafeteria Menu for Today
 (Use this prompt daily to extract and format the menu from one restaurant section on the ETH Zürich cafeteria site.)
 
@@ -82,15 +97,11 @@ Restaurant Closed.
 
     for attempt in range(3):
         try:
-            response = client.chat.completions.create(
-                model="gpt-4.1-nano",
-                messages=[{"role": "user", "content": prompt}],
-            )
-            result = response.choices[0].message.content.strip()
+            result = ask_claude(prompt)
             if "Menu translation failed today" not in result:
                 return result
         except Exception as e:
-            print(f"❌ GPT attempt {attempt + 1} failed:", e)
+            print(f"❌ Claude attempt {attempt + 1} failed:", e)
             time.sleep(1)
     return "Menu translation failed today."
 
@@ -111,11 +122,7 @@ If no dishes found or unable to determine, respond with:
 
     for attempt in range(3):
         try:
-            response = client.chat.completions.create(
-                model="gpt-4.1-nano",
-                messages=[{"role": "user", "content": prompt}],
-            )
-            result = response.choices[0].message.content.strip()
+            result = ask_claude(prompt)
             return result
         except Exception as e:
             print(f"❌ Eco tip attempt {attempt + 1} failed:", e)
@@ -150,8 +157,8 @@ if __name__ == "__main__":
     print(visible_text_fu[:2000])
     print("\n--- END OF TEXT SNIPPETS ---\n")
 
-    translated_menu_fm = translate_menu_with_gpt(visible_text_fm)
-    translated_menu_fu = translate_menu_with_gpt(visible_text_fu)
+    translated_menu_fm = translate_menu_with_claude(visible_text_fm)
+    translated_menu_fu = translate_menu_with_claude(visible_text_fu)
     eco_tip_fm = get_eco_tip(visible_text_fm)
     eco_tip_fu = get_eco_tip(visible_text_fu)
 
