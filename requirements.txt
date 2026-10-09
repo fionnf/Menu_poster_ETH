@@ -1,6 +1,6 @@
 selenium
 webdriver-manager
 slack_sdk
-openai
+anthropic
 bs4
 dotenv

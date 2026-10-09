@@ -1,6 +1,6 @@
 # 🧾 ETH Zürich Menu to Slack Posting Action Bot
 
-This GitHub Action fetches the daily menus from the ETH Zürich **Fusion** and **Food Market** cafeterias, translates and formats them using GPT, and posts a clean, emoji-enhanced message to a specified Slack channel.
+This GitHub Action fetches the daily menus from the ETH Zürich **Fusion** and **Food Market** cafeterias, translates and formats them using Claude (Anthropic API), and posts a clean, emoji-enhanced message to a specified Slack channel.
 
 ---
 
@@ -8,7 +8,7 @@ This GitHub Action fetches the daily menus from the ETH Zürich **Fusion** and *
 
 - 🧪 Scrapes the ETH Zürich menu pages using Selenium  
 - 🧼 Extracts and cleans the visible text  
-- 🌐 Translates and formats the menu using GPT (OpenAI)  
+- 🌐 Translates and formats the menu using Claude (Anthropic)  
 - 💬 Posts the final message to Slack using a bot  
 
 ---
@@ -35,7 +35,7 @@ These must be set under **Repository Settings → Secrets → Actions**:
 
 | Secret Name        | Description                                      |
 |--------------------|--------------------------------------------------|
-| `OPENAI_API_KEY`   | Your OpenAI API key for GPT access               |
+| `ANTHROPIC_API_KEY` | Your Anthropic API key for Claude access        |
 | `SLACK_BOT_TOKEN`  | Your Slack bot token for posting messages        |
 | `SLACK_CHANNEL_ID` | The Slack channel ID to post the menu into       |
 
